@@ -1,0 +1,8 @@
+INSTALL
+COPYING
+META.yml
+MANIFEST
+Makefile.PL
+TODO
+README
+lib/Colloquy/Data.pm

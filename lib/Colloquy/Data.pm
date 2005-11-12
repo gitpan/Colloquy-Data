@@ -1,0 +1,177 @@
+package Colloquy::Data;
+
+use strict;
+use Exporter;
+use Time::Duration qw(duration);
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+use constant DEFAULT_DATADIR => '/usr/local/colloquy/data';
+
+$VERSION     = sprintf('%d.%02d', q$Revision: 1.1 $ =~ /(\d+)/g);
+@ISA         = qw(Exporter);
+@EXPORT      = ();
+@EXPORT_OK   = qw(&lists &users &caps &commify);
+%EXPORT_TAGS = ( all => [ qw(&lists &users &caps &commify) ] );
+
+sub users {
+	return _get_data(shift);
+}
+
+sub lists {
+	my ($users,$lists) = _get_data(shift);
+	return ($lists,$users);
+}
+
+sub caps {
+	(my $c = $_[0]) =~ s/_/ /g;
+	my @c = split(/\b/,$c);
+	foreach (@c) { if (/^([a-z])(.*)/) { $_ = uc($1).$2; } }
+	return join("",@c);
+}
+
+sub commify {
+	local $_ = shift;
+	s/^\s+|\s+$//g;
+	1 while s/^([-+]?\d+)(\d{3})/$1,$2/;
+	return $_;
+}
+
+sub _munge_user_lua {
+	local $_ = shift;
+	s/'/\\'/g;
+	s/"/'/g; #"'
+	s/(\s+[a-z0-9]+\s+=)(\s+['{\d+])/$1>$2/gi;
+	return $_;
+}
+
+sub _munge_list_lua {
+	local $_ = shift;
+	s/\s+\['(\S+?)'\]\s+=\s+{/ $1 => {/g;
+	s/'/\\'/g;
+	s/"/'/g; #"'
+	s/(\s+[a-z0-9]+\s+=)(\s+['{\d+])/$1>$2/gi;
+	s/(\s+members\s+=>\s+)\{(.+?)\}/$1 [ ( $2 ) ]/sgi;
+	return $_;
+}
+
+sub _read_file {
+	my $file = shift;
+	die "No such file '$file'\n" unless -f $file;
+	die "Unable to read file '$file'\n" unless -r $file;
+	if (open(FH,"<$file")) {
+		local $/ = undef;
+		my $data = <FH>;
+		close(FH);
+		return $data;
+	} else {
+		die "Unable to open file handle FH for file '$file': $!";
+		# return undef;
+	}
+}
+
+sub _get_data {
+	my $datadir = shift || DEFAULT_DATADIR;
+	my $users_lua = $datadir.'/users'.(-f $datadir.'/users.lua' ? '.lua' : '');
+	my $lists_lua = $datadir.'/lists'.(-f $datadir.'/lists.lua' ? '.lua' : '');
+
+	my $users = {};
+	die "Unable to read $users_lua\n" unless -r $users_lua;
+
+	if (-f $users_lua) {
+		my $coderef = _munge_user_lua( '$' . _read_file($users_lua) );
+		eval $coderef;
+
+	} elsif (-d $users_lua) {
+		if (opendir(DH,$users_lua)) {
+			for my $user (grep(!/^\./,readdir(DH))) {
+				my $coderef = _munge_user_lua( _read_file("$users_lua/$user") );
+				$users->{$user} = eval $coderef;
+			}
+			closedir(DH);
+		} else {
+			die "Failed to open file handle DH for directory '$users_lua': $!";
+		}
+	}
+
+	my $lists = {};
+	die "Unable to read $lists_lua\n" unless -r $lists_lua;
+
+	if (-f $lists_lua) {
+		my $coderef = _munge_list_lua( '$' . _read_file($lists_lua) );
+		eval $coderef;
+
+	} elsif (-d $lists_lua) {
+		if (opendir(DH,$lists_lua)) {
+			for my $list (grep(!/^\./,readdir(DH))) {
+				my $coderef = _munge_list_lua( _read_file("$lists_lua/$list") );
+				$lists->{$list} = eval $coderef;
+			}
+			closedir(DH);
+		} else {
+			die "Failed to open file handle DH for directory '$lists_lua': $!";
+		}
+	}
+
+	for my $list (keys %{$lists}) {
+		for my $member (@{$lists->{$list}->{members}}) {
+			$users->{$member}->{lists} = [] unless exists $users->{$member}->{lists};
+			$lists->{$list}->{users} = [] unless exists $lists->{$list}->{users};
+			push @{$users->{$member}->{lists}},$list;
+			push @{$lists->{$list}->{users}},$member;
+		}
+	}
+
+	return ($users,$lists);
+}
+
+1;
+
+=pod
+
+=head1 NAME
+
+Colloquy::Data - Read Colloquy 1.3 and 1.4 data file
+
+=head1 SYNOPSIS
+
+ use Data::Dumper;
+ use Colloquy::Data qw(:all);
+ 
+ my $colloquy_datadir = '/home/system/colloquy/data';
+ 
+ #my ($users_hashref,$lists_hashref) = users($colloquy_datadir);
+ my ($lists_hashref,$users_hashref) = lists($colloquy_datadir);
+ 
+ print 'Users: '.Dumper($users);
+ print 'Lists: '.Dumper($lists);
+
+=head1 DESCRIPTION
+
+This module munges the users.lua and lists.lua (Colloquy 1.3x) files
+in to executable perl code which is then evaluated. Colloquy 1.4 uses
+a seperate LUA file for each user and list, which are located in the
+users and lists directories in the Colloquy data directory. These files
+are read one by one and evaluated in the same way.
+
+This module should therefore be used with caution if you cannot gaurentee
+the integrity of the user and list LUA files! The module will issue a
+warning complaining about write group permissions if ^W warnings are
+enabled, and will die if any of the LUA files have world writable
+permissions.
+
+=head1 VERSION
+
+$Revision: 1.1 $
+
+=head1 AUTHOR
+
+Nicola Worthington <nicolaw@cpan.org>
+
+http://www.nicolaworthington.com
+
+$Author: nicolaw $
+
+=cut
+
+__END__
+
+
