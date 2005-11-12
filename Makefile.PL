@@ -7,6 +7,8 @@ WriteMakefile(
    VERSION_FROM  => 'lib/Colloquy/Data.pm',
    ABSTRACT_FROM => 'lib/Colloquy/Data.pm',
    AUTHOR        => 'Nicola Worthington <nicolaworthington@msn.com>',
-   PREREQ_PM     => { },
+   PREREQ_PM     => { 
+                        'Carp' => 0,
+                    },
 );
 

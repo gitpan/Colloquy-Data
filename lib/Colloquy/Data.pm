@@ -2,11 +2,12 @@ package Colloquy::Data;
 
 use strict;
 use Exporter;
-use Time::Duration qw(duration);
+use Fcntl ':mode';
+use Carp qw(cluck croak);
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant DEFAULT_DATADIR => '/usr/local/colloquy/data';
 
-$VERSION     = sprintf('%d.%02d', q$Revision: 1.1 $ =~ /(\d+)/g);
+$VERSION     = sprintf('%d.%02d', q$Revision: 1.2 $ =~ /(\d+)/g);
 @ISA         = qw(Exporter);
 @EXPORT      = ();
 @EXPORT_OK   = qw(&lists &users &caps &commify);
@@ -55,15 +56,28 @@ sub _munge_list_lua {
 
 sub _read_file {
 	my $file = shift;
-	die "No such file '$file'\n" unless -f $file;
-	die "Unable to read file '$file'\n" unless -r $file;
+	croak "No such file '$file'\n" unless -e $file;
+	croak "'$file' is not a plain file type\n" unless -f _;
+	croak "Insufficient permissions to read file '$file'\n" unless -r _;
+
+	my $mode = (stat(_))[2];
+	my $group_write = ($mode & S_IWGRP) >> 3;
+	my $other_write = $mode & S_IWOTH;
+
+	if ($^W && $group_write) {
+		cluck "WARNING! $file is group writeable. This is potentially insecure!";
+	}
+	if ($other_write) {
+		croak "FATAL! $file is world writeable. This insecure file cannot be evaluated!";
+	}
+
 	if (open(FH,"<$file")) {
 		local $/ = undef;
 		my $data = <FH>;
 		close(FH);
 		return $data;
 	} else {
-		die "Unable to open file handle FH for file '$file': $!";
+		croak "Unable to open file handle FH for file '$file': $!";
 		# return undef;
 	}
 }
@@ -74,7 +88,7 @@ sub _get_data {
 	my $lists_lua = $datadir.'/lists'.(-f $datadir.'/lists.lua' ? '.lua' : '');
 
 	my $users = {};
-	die "Unable to read $users_lua\n" unless -r $users_lua;
+	croak "Insufficient permissions to read $users_lua\n" unless -r $users_lua;
 
 	if (-f $users_lua) {
 		my $coderef = _munge_user_lua( '$' . _read_file($users_lua) );
@@ -83,17 +97,21 @@ sub _get_data {
 	} elsif (-d $users_lua) {
 		if (opendir(DH,$users_lua)) {
 			for my $user (grep(!/^\./,readdir(DH))) {
+				unless (-r "$users_lua/$user") {
+					cluck "Insufficient permissions to read $users_lua/$user";
+					next;
+				}
 				my $coderef = _munge_user_lua( _read_file("$users_lua/$user") );
 				$users->{$user} = eval $coderef;
 			}
 			closedir(DH);
 		} else {
-			die "Failed to open file handle DH for directory '$users_lua': $!";
+			croak "Failed to open file handle DH for directory '$users_lua': $!";
 		}
 	}
 
 	my $lists = {};
-	die "Unable to read $lists_lua\n" unless -r $lists_lua;
+	croak "Insufficient permissions to read $lists_lua\n" unless -r $lists_lua;
 
 	if (-f $lists_lua) {
 		my $coderef = _munge_list_lua( '$' . _read_file($lists_lua) );
@@ -102,12 +120,16 @@ sub _get_data {
 	} elsif (-d $lists_lua) {
 		if (opendir(DH,$lists_lua)) {
 			for my $list (grep(!/^\./,readdir(DH))) {
+				unless (-r "$lists_lua/$list") {
+					cluck "Insufficient permissions to read $lists_lua/$list";
+					next;
+				}
 				my $coderef = _munge_list_lua( _read_file("$lists_lua/$list") );
 				$lists->{$list} = eval $coderef;
 			}
 			closedir(DH);
 		} else {
-			die "Failed to open file handle DH for directory '$lists_lua': $!";
+			croak "Failed to open file handle DH for directory '$lists_lua': $!";
 		}
 	}
 
@@ -154,13 +176,13 @@ are read one by one and evaluated in the same way.
 
 This module should therefore be used with caution if you cannot gaurentee
 the integrity of the user and list LUA files! The module will issue a
-warning complaining about write group permissions if ^W warnings are
+warning complaining about write group permissions if $^W warnings are
 enabled, and will die if any of the LUA files have world writable
 permissions.
 
 =head1 VERSION
 
-$Revision: 1.1 $
+$Revision: 1.2 $
 
 =head1 AUTHOR
 
