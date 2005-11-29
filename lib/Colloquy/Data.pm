@@ -7,7 +7,7 @@ use Carp qw(cluck croak);
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant DEFAULT_DATADIR => '/usr/local/colloquy/data';
 
-$VERSION     = sprintf('%d.%02d', q$Revision: 1.2 $ =~ /(\d+)/g);
+$VERSION     = sprintf('%d.%02d', q$Revision: 1.4 $ =~ /(\d+)/g);
 @ISA         = qw(Exporter);
 @EXPORT      = ();
 @EXPORT_OK   = qw(&lists &users &caps &commify);
@@ -102,7 +102,11 @@ sub _get_data {
 					next;
 				}
 				my $coderef = _munge_user_lua( _read_file("$users_lua/$user") );
-				$users->{$user} = eval $coderef;
+				if (length($coderef) > 9 && $coderef =~ /return {.+}/gsi) {
+					eval { $users->{$user} = eval $coderef; }
+				} else {
+					cluck "Caught known Colloquy data file corruption for user $user";
+				}
 			}
 			closedir(DH);
 		} else {
@@ -151,7 +155,7 @@ sub _get_data {
 
 =head1 NAME
 
-Colloquy::Data - Read Colloquy 1.3 and 1.4 data file
+Colloquy::Data - Read Colloquy 1.3 and 1.4 data files
 
 =head1 SYNOPSIS
 
@@ -182,7 +186,7 @@ permissions.
 
 =head1 VERSION
 
-$Revision: 1.2 $
+$Revision: 1.4 $
 
 =head1 AUTHOR
 
