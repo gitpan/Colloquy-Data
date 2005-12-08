@@ -7,7 +7,7 @@ use Carp qw(cluck croak);
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant DEFAULT_DATADIR => '/usr/local/colloquy/data';
 
-$VERSION     = sprintf('%d.%02d', q$Revision: 1.4 $ =~ /(\d+)/g);
+$VERSION     = sprintf('%d.%02d', q$Revision: 1.5 $ =~ /(\d+)/g);
 @ISA         = qw(Exporter);
 @EXPORT      = ();
 @EXPORT_OK   = qw(&lists &users &caps &commify);
@@ -184,17 +184,27 @@ warning complaining about write group permissions if $^W warnings are
 enabled, and will die if any of the LUA files have world writable
 permissions.
 
+=head1 SEE ALSO
+
+L<http://freshmeat.net/projects/colloquy-talker/>
+
 =head1 VERSION
 
-$Revision: 1.4 $
+$Id: Data.pm,v 1.5 2005/12/08 15:16:54 nicolaw Exp $
 
 =head1 AUTHOR
 
 Nicola Worthington <nicolaw@cpan.org>
 
-http://www.nicolaworthington.com
+http://perlgirl.org.uk
 
-$Author: nicolaw $
+=head1 COPYRIGHT
+
+(c) Nicola Worthington 2005. This program is free software; you can
+redistribute it and/or modify it under the GNU GPL.
+
+See the file COPYING in this distribution, or
+http://www.gnu.org/licenses/gpl.txt 
 
 =cut
 
