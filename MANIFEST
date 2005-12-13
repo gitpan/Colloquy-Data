@@ -6,3 +6,12 @@ Makefile.PL
 TODO
 README
 lib/Colloquy/Data.pm
+t/13test.t
+t/14test.t
+t/data1.4/lists/perl
+t/data1.4/lists/vent
+t/data1.4/lists/girlsonly
+t/data1.4/users/jane
+t/data1.4/users/john
+t/data1.3/users.lua
+t/data1.3/lists.lua

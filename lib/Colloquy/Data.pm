@@ -7,7 +7,7 @@ use Carp qw(cluck croak);
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant DEFAULT_DATADIR => '/usr/local/colloquy/data';
 
-$VERSION     = sprintf('%d.%02d', q$Revision: 1.5 $ =~ /(\d+)/g);
+$VERSION     = sprintf('%d.%02d', q$Revision: 1.8 $ =~ /(\d+)/g);
 @ISA         = qw(Exporter);
 @EXPORT      = ();
 @EXPORT_OK   = qw(&lists &users &caps &commify);
@@ -97,6 +97,7 @@ sub _get_data {
 	} elsif (-d $users_lua) {
 		if (opendir(DH,$users_lua)) {
 			for my $user (grep(!/^\./,readdir(DH))) {
+				next unless -f "$users_lua/$user";
 				unless (-r "$users_lua/$user") {
 					cluck "Insufficient permissions to read $users_lua/$user";
 					next;
@@ -124,6 +125,7 @@ sub _get_data {
 	} elsif (-d $lists_lua) {
 		if (opendir(DH,$lists_lua)) {
 			for my $list (grep(!/^\./,readdir(DH))) {
+				next unless -f "$lists_lua/$list";
 				unless (-r "$lists_lua/$list") {
 					cluck "Insufficient permissions to read $lists_lua/$list";
 					next;
@@ -162,13 +164,13 @@ Colloquy::Data - Read Colloquy 1.3 and 1.4 data files
  use Data::Dumper;
  use Colloquy::Data qw(:all);
  
- my $colloquy_datadir = '/home/system/colloquy/data';
+ my $colloquy_datadir = "/home/system/colloquy/data";
  
  #my ($users_hashref,$lists_hashref) = users($colloquy_datadir);
  my ($lists_hashref,$users_hashref) = lists($colloquy_datadir);
  
- print 'Users: '.Dumper($users);
- print 'Lists: '.Dumper($lists);
+ print "Users: ".Dumper($users);
+ print "Lists: ".Dumper($lists);
 
 =head1 DESCRIPTION
 
@@ -190,13 +192,13 @@ L<http://freshmeat.net/projects/colloquy-talker/>
 
 =head1 VERSION
 
-$Id: Data.pm,v 1.5 2005/12/08 15:16:54 nicolaw Exp $
+$Id: Data.pm,v 1.8 2005/12/13 12:49:15 nicolaw Exp $
 
 =head1 AUTHOR
 
 Nicola Worthington <nicolaw@cpan.org>
 
-http://perlgirl.org.uk
+L<http://perlgirl.org.uk>
 
 =head1 COPYRIGHT
 
@@ -204,7 +206,7 @@ http://perlgirl.org.uk
 redistribute it and/or modify it under the GNU GPL.
 
 See the file COPYING in this distribution, or
-http://www.gnu.org/licenses/gpl.txt 
+L<http://www.gnu.org/licenses/gpl.txt>
 
 =cut
 

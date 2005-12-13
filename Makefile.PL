@@ -9,6 +9,8 @@ WriteMakefile(
    AUTHOR        => 'Nicola Worthington <nicolaworthington@msn.com>',
    PREREQ_PM     => { 
                         'Carp' => 0,
+                        'Test::More' => 0,
+                        'Test::Assertions' => 0,
                     },
 );
 
