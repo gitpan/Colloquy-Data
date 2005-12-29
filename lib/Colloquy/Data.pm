@@ -1,3 +1,25 @@
+############################################################
+# $Id: Data.pm,v 1.9 2005/12/29 18:16:59 nicolaw Exp $
+# Colloquy::Data - Read Colloquy 1.3 and 1.4 data files
+# Copyright: (c)2005 Nicola Worthington. All rights reserved.
+############################################################
+# This file is part of Colloquy::Data.
+#
+# Colloquy::Data is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# Colloquy::Data is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Colloquy::Data; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+############################################################
+
 package Colloquy::Data;
 
 use strict;
@@ -7,7 +29,7 @@ use Carp qw(cluck croak);
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant DEFAULT_DATADIR => '/usr/local/colloquy/data';
 
-$VERSION     = sprintf('%d.%02d', q$Revision: 1.8 $ =~ /(\d+)/g);
+$VERSION     = sprintf('%d.%02d', q$Revision: 1.9 $ =~ /(\d+)/g);
 @ISA         = qw(Exporter);
 @EXPORT      = ();
 @EXPORT_OK   = qw(&lists &users &caps &commify);
@@ -192,7 +214,7 @@ L<http://freshmeat.net/projects/colloquy-talker/>
 
 =head1 VERSION
 
-$Id: Data.pm,v 1.8 2005/12/13 12:49:15 nicolaw Exp $
+$Id: Data.pm,v 1.9 2005/12/29 18:16:59 nicolaw Exp $
 
 =head1 AUTHOR
 

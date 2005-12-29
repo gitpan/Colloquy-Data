@@ -1,0 +1,34 @@
+Version 1.9 - 29th December 2005
+    + Added Changes file.
+
+    + Added GPL license header comment to various files.
+
+    + Modified Makefile.PL to send anonymous information to
+      http://perlgirl.org.uk/lib/usage.cgi if the user
+      agrees. This is so I can track which of my modules
+      are most heavily used and on what platforms, so I can
+      concentrate on maintaning the most popular ones in
+      my limited spare time.
+
+Version 1.6 - 13th December 2005
+    + Changed code to only read in files and ignore
+      directories.
+
+Version 1.5 - 8th December 2005
+    + Changed POD.
+
+Version 1.4 - 28th November 2005
+    + Added condition to catch known invalid user data files
+      in colloquy when only the "return {" line is written
+      because of case sensitive cruft in the colloquy code.
+
+Version 1.3 - 12th November 2005
+    + Fixed typo.
+
+Version 1.2 - 12th November 2005
+    + Updated the code to include carping and to actually
+      do the permissions checking ;-)
+
+Version 1.1 - 12th November 2005
+    + Adding initial release.
+
