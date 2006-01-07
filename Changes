@@ -1,3 +1,11 @@
+Version 1.11 - 7th January 2006
+    + Added Test::Pod and Test::Pod::Coverage unit
+      tests to make more compliant with CPANTS.
+
+Version 1.10 - 30th December 2005
+    + Changed license to Apache 2.0
+      http://www.apache.org/licenses/LICENSE-2.0
+
 Version 1.9 - 29th December 2005
     + Added Changes file.
 

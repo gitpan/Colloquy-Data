@@ -1,6 +1,7 @@
 Changes
 INSTALL
-COPYING
+LICENSE
+NOTICE
 META.yml
 MANIFEST
 Makefile.PL
@@ -16,3 +17,5 @@ t/data1.4/users/jane
 t/data1.4/users/john
 t/data1.3/users.lua
 t/data1.3/lists.lua
+t/02pod_coverage.t
+t/01pod.t
