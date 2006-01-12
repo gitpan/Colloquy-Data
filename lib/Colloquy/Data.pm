@@ -1,6 +1,6 @@
 ############################################################
 #
-#   $Id: Data.pm,v 1.12 2006/01/12 13:22:06 nicolaw Exp $
+#   $Id: Data.pm,v 1.13 2006/01/12 21:42:35 nicolaw Exp $
 #   Colloquy::Data - Read Colloquy 1.3 and 1.4 data files
 #
 #   Copyright 2005,2006 Nicola Worthington
@@ -29,7 +29,7 @@ use Carp qw(cluck croak);
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant DEFAULT_DATADIR => '/usr/local/colloquy/data';
 
-$VERSION     = sprintf('%d.%02d', q$Revision: 1.12 $ =~ /(\d+)/g);
+$VERSION     = sprintf('%d.%02d', q$Revision: 1.13 $ =~ /(\d+)/g);
 @ISA         = qw(Exporter);
 @EXPORT      = ();
 @EXPORT_OK   = qw(&lists &users &caps &commify);
@@ -208,13 +208,27 @@ warning complaining about write group permissions if $^W warnings are
 enabled, and will die if any of the LUA files have world writable
 permissions.
 
+=head1 EXPORTS
+
+=head2 users
+
+ my ($users_hashref,$lists_hashref) = users($colloquy_datadir);
+
+Returns users and lists hash references, in that order.
+
+=head2 lists
+
+ my ($lists_hashref,$users_hashref) = lists($colloquy_datadir);
+
+Returns lists and users hash references, in that order.
+
 =head1 SEE ALSO
 
 L<http://freshmeat.net/projects/colloquy-talker/>
 
 =head1 VERSION
 
-$Id: Data.pm,v 1.12 2006/01/12 13:22:06 nicolaw Exp $
+$Id: Data.pm,v 1.13 2006/01/12 21:42:35 nicolaw Exp $
 
 =head1 AUTHOR
 

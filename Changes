@@ -1,3 +1,9 @@
+Version 1.13 - 12th January 2006
+    + Fixed POD so that it actually passes the
+      Test::Pod::Coverage unit tests, and fixed
+      the unit test so that it actually tests the
+      POD coverage since it wasn't before.
+
 Version 1.12 - 12th January 2006
     + Tweaked unit test for 1.4 data to ensure
       that permissions are safe to begin with, and
