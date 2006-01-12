@@ -2,9 +2,16 @@ chdir('t') if -d 't';
 
 use strict;
 use Test::Assertions qw(test/ok);
-plan tests => 2;
+plan tests => 3;
 use lib qw(./lib ../lib);
 use Colloquy::Data qw(:all);
+
+eval {
+	for my $file (qw(users/jane users/john
+			lists/vent lists/perl lists/girlsonly)) {
+		chmod(0644,"data1.4/$file");
+	}
+};
 
 my $datadir = "data1.4";
 my ($lists) = lists($datadir);
@@ -260,4 +267,12 @@ $OK = {
         };
 
 ASSERT(EQUAL($OK,$users));
+
+eval {
+	my $oldW = $^W; $^W = 0;
+	chmod(0666,"data1.4/lists/girlsonly");
+	($lists) = lists($datadir);
+	$^W = $oldW;
+};
+ok($@ =~ /insecure/,'dies properly on insecure permissions');
 

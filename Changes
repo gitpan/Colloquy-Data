@@ -1,3 +1,9 @@
+Version 1.12 - 12th January 2006
+    + Tweaked unit test for 1.4 data to ensure
+      that permissions are safe to begin with, and
+      then force an insecurity to test the security
+      trap.
+
 Version 1.11 - 7th January 2006
     + Added Test::Pod and Test::Pod::Coverage unit
       tests to make more compliant with CPANTS.

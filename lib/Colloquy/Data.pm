@@ -1,6 +1,6 @@
 ############################################################
 #
-#   $Id: Data.pm,v 1.11 2006/01/07 12:13:27 nicolaw Exp $
+#   $Id: Data.pm,v 1.12 2006/01/12 13:22:06 nicolaw Exp $
 #   Colloquy::Data - Read Colloquy 1.3 and 1.4 data files
 #
 #   Copyright 2005,2006 Nicola Worthington
@@ -29,7 +29,7 @@ use Carp qw(cluck croak);
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use constant DEFAULT_DATADIR => '/usr/local/colloquy/data';
 
-$VERSION     = sprintf('%d.%02d', q$Revision: 1.11 $ =~ /(\d+)/g);
+$VERSION     = sprintf('%d.%02d', q$Revision: 1.12 $ =~ /(\d+)/g);
 @ISA         = qw(Exporter);
 @EXPORT      = ();
 @EXPORT_OK   = qw(&lists &users &caps &commify);
@@ -214,7 +214,7 @@ L<http://freshmeat.net/projects/colloquy-talker/>
 
 =head1 VERSION
 
-$Id: Data.pm,v 1.11 2006/01/07 12:13:27 nicolaw Exp $
+$Id: Data.pm,v 1.12 2006/01/12 13:22:06 nicolaw Exp $
 
 =head1 AUTHOR
 
@@ -233,5 +233,6 @@ L<http://www.apache.org/licenses/LICENSE-2.0>
 =cut
 
 __END__
+
 
 
