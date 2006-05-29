@@ -1,6 +1,6 @@
 ############################################################
 #
-#   $Id: Data.pm,v 1.14 2006/01/12 21:42:35 nicolaw Exp $
+#   $Id: Data.pm 526 2006-05-29 12:27:43Z nicolaw $
 #   Colloquy::Data - Read Colloquy 1.3 and 1.4 data files
 #
 #   Copyright 2005,2006 Nicola Worthington
@@ -26,10 +26,13 @@ use strict;
 use Exporter;
 use Fcntl ':mode';
 use Carp qw(cluck croak);
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+use Safe;
+
+use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS $DEBUG);
 use constant DEFAULT_DATADIR => '/usr/local/colloquy/data';
 
-$VERSION     = sprintf('%d.%02d', q$Revision: 1.14 $ =~ /(\d+)/g);
+$VERSION     = '1.15' || sprintf('%d', q$Revision: 526 $ =~ /(\d+)/g);
+$DEBUG       = $ENV{DEBUG} ? 1 : 0;
 @ISA         = qw(Exporter);
 @EXPORT      = ();
 @EXPORT_OK   = qw(&lists &users &caps &commify);
@@ -63,6 +66,7 @@ sub _munge_user_lua {
 	s/'/\\'/g;
 	s/"/'/g; #"'
 	s/(\s+[a-z0-9]+\s+=)(\s+['{\d+])/$1>$2/gi;
+	s/^return //;
 	return $_;
 }
 
@@ -73,6 +77,7 @@ sub _munge_list_lua {
 	s/"/'/g; #"'
 	s/(\s+[a-z0-9]+\s+=)(\s+['{\d+])/$1>$2/gi;
 	s/(\s+members\s+=>\s+)\{(.+?)\}/$1 [ ( $2 ) ]/sgi;
+	s/^return //;
 	return $_;
 }
 
@@ -86,11 +91,16 @@ sub _read_file {
 	my $group_write = ($mode & S_IWGRP) >> 3;
 	my $other_write = $mode & S_IWOTH;
 
-	if ($^W && $group_write) {
-		cluck "WARNING! $file is group writeable. This is potentially insecure!";
-	}
-	if ($other_write) {
-		croak "FATAL! $file is world writeable. This insecure file cannot be evaluated!";
+	# Since this module started using Safe to parse the data files,
+	# this code is no longer as important as before. It's now only
+	# a warning.
+#	if ($^W && $group_write) {
+#		cluck "WARNING! $file is group writeable. This is potentially insecure!";
+#	}
+	#if ($other_write) {
+	if ($^W && $other_write) {
+		#croak "FATAL! $file is world writeable. This insecure file cannot be evaluated!";
+		cluck "WARNING! $file is world writeable. This is potentially insecure!";
 	}
 
 	if (open(FH,"<$file")) {
@@ -112,9 +122,16 @@ sub _get_data {
 	my $users = {};
 	croak "Insufficient permissions to read $users_lua\n" unless -r $users_lua;
 
+	my $c = new Safe;
+	# Minimum safe opcode set for building data structures lineseq, list and
+	# padany needed for perl 5.8.7
+	$c->permit_only(qw(rv2sv sassign aelem aelemfast helem anonlist anonhash
+				pushmark refgen const undef leaveeval lineseq list padany));
+
 	if (-f $users_lua) {
 		my $coderef = _munge_user_lua( '$' . _read_file($users_lua) );
-		eval $coderef;
+		$users = $c->reval($coderef);
+		#eval $coderef;
 
 	} elsif (-d $users_lua) {
 		if (opendir(DH,$users_lua)) {
@@ -125,8 +142,12 @@ sub _get_data {
 					next;
 				}
 				my $coderef = _munge_user_lua( _read_file("$users_lua/$user") );
-				if (length($coderef) > 9 && $coderef =~ /return {.+}/gsi) {
-					eval { $users->{$user} = eval $coderef; }
+				if (length($coderef) > 9 && $coderef =~ /^\s*(return )?{.+}\s*$/gsi) {
+#				if (length($coderef) > 9 && $coderef =~ /return {.+}/gsi) {
+					DUMP('$coderef',$coderef);
+					$users->{$user} = $c->reval($coderef);
+					DUMP('$users',$users);
+					#eval { $users->{$user} = eval $coderef; }
 				} else {
 					cluck "Caught known Colloquy data file corruption for user $user";
 				}
@@ -142,7 +163,8 @@ sub _get_data {
 
 	if (-f $lists_lua) {
 		my $coderef = _munge_list_lua( '$' . _read_file($lists_lua) );
-		eval $coderef;
+		$lists = $c->reval($coderef);
+		#eval $coderef;
 
 	} elsif (-d $lists_lua) {
 		if (opendir(DH,$lists_lua)) {
@@ -153,7 +175,15 @@ sub _get_data {
 					next;
 				}
 				my $coderef = _munge_list_lua( _read_file("$lists_lua/$list") );
-				$lists->{$list} = eval $coderef;
+				if (length($coderef) > 9 && $coderef =~ /^\s*(return )?{.+}\s*$/gsi) {
+#				if (length($coderef) > 9 && $coderef =~ /return {.+}/gsi) {
+					DUMP('$coderef',$coderef);
+					$lists->{$list} = $c->reval($coderef);
+					DUMP('$lists',$lists);
+					#$lists->{$list} = eval $coderef;
+				} else {
+					cluck "Caught known Colloquy data file corruption for list $list";
+				}
 			}
 			closedir(DH);
 		} else {
@@ -171,6 +201,19 @@ sub _get_data {
 	}
 
 	return ($users,$lists);
+}
+
+sub TRACE {
+	return unless $DEBUG;
+	warn(shift());
+}
+
+sub DUMP {
+	return unless $DEBUG;
+	eval {
+		require Data::Dumper;
+		warn(shift().': '.Data::Dumper::Dumper(shift()));
+	}
 }
 
 1;
@@ -202,11 +245,11 @@ a seperate LUA file for each user and list, which are located in the
 users and lists directories in the Colloquy data directory. These files
 are read one by one and evaluated in the same way.
 
-This module should therefore be used with caution if you cannot gaurentee
-the integrity of the user and list LUA files! The module will issue a
-warning complaining about write group permissions if $^W warnings are
-enabled, and will die if any of the LUA files have world writable
-permissions.
+This module compiles and execute the Colloquy data files in restricted
+compartments using the L<Safe> module. Even so, this module should be
+used with caution if you cannot gaurentee the integrity of the user and
+list LUA files. The module will issue a warning complaining about world
+writable permissions if $^W warnings.
 
 =head1 EXPORTS
 
@@ -224,11 +267,11 @@ Returns lists and users hash references, in that order.
 
 =head1 SEE ALSO
 
-L<http://freshmeat.net/projects/colloquy-talker/>
+L<http://freshmeat.net/projects/colloquy-talker/>, L<Apache2::AuthColloquy>
 
 =head1 VERSION
 
-$Id: Data.pm,v 1.14 2006/01/12 21:42:35 nicolaw Exp $
+$Id: Data.pm 526 2006-05-29 12:27:43Z nicolaw $
 
 =head1 AUTHOR
 
